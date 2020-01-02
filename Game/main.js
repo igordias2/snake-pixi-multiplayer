@@ -7,8 +7,8 @@ pixiapp.renderer.backgroundColor = 0x26272b;
 let users = [];
 // let playerSnake;
 
-socket.on('assign player id', (playerid, pos) => {
-    var player = new Player(playerid, new Snake(pos));
+socket.on('assign player id', (playerid, pos, isPlayer) => {
+    var player = new Player(playerid, new Snake(pos, isPlayer));
     users.push(player);
 });
 
@@ -17,13 +17,18 @@ function Player(playerid,snake){
     this.snake = snake;
 }
 
-function Snake(pos){
+function Snake(pos, isPlayer){
     
     this.name = 'user';
     this.head = new PIXI.Graphics();
     this.body = [];
-
+    this.isPlayer = isPlayer;
+    if(this.isPlayer)
     this.head.lineStyle(4,0xFFFFFF,2);
+    else{
+    this.head.lineStyle(4,0xFF0000,2);
+
+    }
 
     this.head.x = pos[0];
     this.head.y = pos[1];
@@ -62,30 +67,8 @@ PIXI.Ticker.shared.add(this.UpdateGame);
 
 function UpdateGame(deltaTime){
     CheckMoveDirection();
-    //CheckMove();
 }
-// socket.on('assign player id',  ( objToMoveID ,movepos) => {
-//     console.log(objToMoveID + " " + movepos);
-// });
 
-// function CheckMove(){
-//     framesCount++;
-//     if(framesCount >= 30)
-//     {
-//         Move();
-//         framesCount = 0;
-//     }
-// }
-// function Move(){
-
-//     let lastMoveDirection = moveDirection;
-//     var lastheadpos = [playerSnake.head.x, playerSnake.head.y];
- 
-//     // moveHead(playerSnake.head, moveDirection);
-//     // moveBody(lastheadpos, lastMoveDirection);
-
-//     // socket.emit('move msg', lastheadpos);
-// }
 function moveBody(lastheadpos, lastMoveDirection) {
     const lastBody = playerSnake.body.pop();
     lastBody.clear();
@@ -108,12 +91,14 @@ function moveBody(lastheadpos, lastMoveDirection) {
     }
     playerSnake.body.unshift(lastBody);
 }
-function moveHeadMP(obj, movepos, movedir){
+function moveHeadMP(obj, movepos, movedir, isPlayer){
             obj.clear();
 
             //if(obj === playerSnake)
-             
-            obj.lineStyle(4,0xFFFFFF,2);
+            if(isPlayer)
+                obj.lineStyle(4,0xFFFFFF,2);
+            else
+                obj.lineStyle(4,0xFF0000,2);
             // else
             //     obj.lineStyle(4, 0xFFFFFF, 2);
 
@@ -136,7 +121,8 @@ function moveHeadMP(obj, movepos, movedir){
             }
 }
 socket.on('moveplayer', (playerid, pos, mov) => {
-    moveHeadMP(GetPlayerByID(playerid).snake.head, pos,mov)
+    var p = GetPlayerByID(playerid);
+    moveHeadMP(p.snake.head, pos,mov, p.snake.isPlayer);
     
     //console.log(GetPlayerByID(playerid));
 });

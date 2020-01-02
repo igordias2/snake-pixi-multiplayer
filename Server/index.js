@@ -43,7 +43,6 @@ io.on('connection', function(socket){
   socket.on('playerChangeDirection', (dir) => { 
     let player = GetPlayerByID(socket.id);
     player.snake.moveDirection = dir;
-    console.log ("o player " + socket.id + " se moveu para " + dir);
   });
 });
 
@@ -84,12 +83,9 @@ function moveHead(user){
         user.snake.pos.x += 32;
         break;
     }
-    // if(socket == undefined)
-    //   return;
+
     io.emit(playerMove, user.playerid, user.snake.pos, user.snake.moveDirection);
-    //user.playerSocket.emit(playerMove, user.playerid, user.snake.pos);
-    //user.playerSocket.broadcast.emit(playerMove, user.playerid, user.snake.pos);
-    // console.log(user.snake.pos);
+
   }
 }
 
@@ -99,11 +95,12 @@ function playerConnection(socket) {
   let user = new Player(playerid, snake, socket);
 
   users.push(user);
-
-  io.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
+  socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y], true);
+  socket.broadcast.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y],false);
+  //io.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
   for (let index = 0; index < users.length; index++) {
     const p = users[index];
-    socket.emit(playerConnected, p.playerid, [p.snake.pos.x,p.snake.pos.y]);
+    socket.emit(playerConnected, p.playerid, [p.snake.pos.x,p.snake.pos.y], false);
   }
   // socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
   // socket.broadcast.emit(playerConnectedBroadcast, socket.id, [0, 0]);
