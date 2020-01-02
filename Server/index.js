@@ -4,7 +4,7 @@ var io = require('socket.io')(http);
 
 var connecteds = 0;
 
-setInterval(gameUpdate, 1000);
+setInterval(gameUpdate, 3000);
 
 function gameUpdate(){
   updatePlayers();
@@ -24,7 +24,7 @@ function playerSnake(){
 
   playerSnake.pos.x = 32;
   playerSnake.pos.y = 0;
-  playerSnake.moveDirection = 2;
+  playerSnake.moveDirection = 3;
 
 
   return playerSnake;
@@ -40,16 +40,16 @@ io.on('connection', function(socket){
   playerConnection(socket);
 
 
-  socket.on(playerChangeDirection, (dir) => { 
+  socket.on('playerChangeDirection', (dir) => { 
     let player = GetPlayerByID(socket.id);
     player.snake.moveDirection = dir;
-    console.log ("o player " + socket.id + " se moveu para " + movePos);
+    console.log ("o player " + socket.id + " se moveu para " + dir);
   });
 });
 
 function GetPlayerByID(id){
   for (let index = 0; index < users.length; index++)
-    if(users[index].id == id)
+    if(users[index].playerid == id)
       return users[index];
     
   return null;
@@ -64,7 +64,6 @@ function updatePlayers() {
   for (let index = 0; index < users.length; index++) {
     var user = users[index];
     moveHead(user);
-
   }
 }
 
@@ -87,7 +86,7 @@ function moveHead(user){
     }
     // if(socket == undefined)
     //   return;
-    io.emit(playerMove, user.playerid, user.snake.pos);
+    io.emit(playerMove, user.playerid, user.snake.pos, user.snake.moveDirection);
     //user.playerSocket.emit(playerMove, user.playerid, user.snake.pos);
     //user.playerSocket.broadcast.emit(playerMove, user.playerid, user.snake.pos);
     // console.log(user.snake.pos);
@@ -101,8 +100,13 @@ function playerConnection(socket) {
 
   users.push(user);
 
-  socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
-  socket.broadcast.emit(playerConnectedBroadcast, socket.id, [0, 0]);
+  io.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
+  for (let index = 0; index < users.length; index++) {
+    const p = users[index];
+    socket.emit(playerConnected, p.playerid, [p.snake.pos.x,p.snake.pos.y]);
+  }
+  // socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
+  // socket.broadcast.emit(playerConnectedBroadcast, socket.id, [0, 0]);
 
 
   connecteds++;

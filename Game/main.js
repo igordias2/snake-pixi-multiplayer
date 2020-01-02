@@ -50,7 +50,7 @@ let moveDirection = 0;
 
 let framesCount = 0;
 
-//PIXI.Ticker.shared.add(this.UpdateGame);
+PIXI.Ticker.shared.add(this.UpdateGame);
 
 // function InitializeGame(){
 
@@ -62,30 +62,30 @@ let framesCount = 0;
 
 function UpdateGame(deltaTime){
     CheckMoveDirection();
-    CheckMove();
+    //CheckMove();
 }
 // socket.on('assign player id',  ( objToMoveID ,movepos) => {
 //     console.log(objToMoveID + " " + movepos);
 // });
 
-function CheckMove(){
-    framesCount++;
-    if(framesCount >= 30)
-    {
-        Move();
-        framesCount = 0;
-    }
-}
-function Move(){
+// function CheckMove(){
+//     framesCount++;
+//     if(framesCount >= 30)
+//     {
+//         Move();
+//         framesCount = 0;
+//     }
+// }
+// function Move(){
 
-    let lastMoveDirection = moveDirection;
-    var lastheadpos = [playerSnake.head.x, playerSnake.head.y];
+//     let lastMoveDirection = moveDirection;
+//     var lastheadpos = [playerSnake.head.x, playerSnake.head.y];
  
-    // moveHead(playerSnake.head, moveDirection);
-    // moveBody(lastheadpos, lastMoveDirection);
+//     // moveHead(playerSnake.head, moveDirection);
+//     // moveBody(lastheadpos, lastMoveDirection);
 
-    // socket.emit('move msg', lastheadpos);
-}
+//     // socket.emit('move msg', lastheadpos);
+// }
 function moveBody(lastheadpos, lastMoveDirection) {
     const lastBody = playerSnake.body.pop();
     lastBody.clear();
@@ -112,7 +112,8 @@ function moveHeadMP(obj, movepos, movedir){
             obj.clear();
 
             //if(obj === playerSnake)
-                obj.lineStyle(4, 0xFFFFFF, 2);
+             
+            obj.lineStyle(4,0xFFFFFF,2);
             // else
             //     obj.lineStyle(4, 0xFFFFFF, 2);
 
@@ -134,10 +135,10 @@ function moveHeadMP(obj, movepos, movedir){
                     break;
             }
 }
-socket.on('moveplayer', (playerid, pos) => {
+socket.on('moveplayer', (playerid, pos, mov) => {
+    moveHeadMP(GetPlayerByID(playerid).snake.head, pos,mov)
+    
     //console.log(GetPlayerByID(playerid));
-    console.log(pos);
-    moveHeadMP(GetPlayerByID(playerid).snake.head, pos, pos.moveDirection)
 });
 
 function GetPlayerByID(id){
@@ -202,7 +203,7 @@ function CheckMoveDirection() {
     }
 }
 function sendMoveDirectionToServer(dir){
-    socket.emit(playerChangeDirection, dir);
+    socket.emit('playerChangeDirection', dir);
 }
 function keyboard(value){
 
