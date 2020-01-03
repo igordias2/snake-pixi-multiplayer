@@ -2,15 +2,23 @@ var app = require('express')();
 var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 
+http.listen(3000, () => {
+  console.log('listening on *:3000');
+});
+
 var connecteds = 0;
 
-setInterval(gameUpdate, 3000);
+setInterval(gameUpdate, 500);
 
 function gameUpdate(){
   updatePlayers();
 };
 
 let users = [];
+var food = [];
+
+
+
 
 function playerSnake(){
 
@@ -30,22 +38,23 @@ function playerSnake(){
   return playerSnake;
 }
 
-
-app.get('/', function(req, res){
-  res.sendFile(__dirname + '/index.html');
-});
-
 io.on('connection', function(socket){
   
   playerConnection(socket);
-
-
+  socket.on('disconnect', () => {
+    removePlayer(GetPlayerByID(socket.id));
+  });
   socket.on('playerChangeDirection', (dir) => { 
     let player = GetPlayerByID(socket.id);
     player.snake.moveDirection = dir;
   });
+  
 });
-
+function removePlayer(player){
+  
+  users.splice(users.indexOf(player),1);
+  io.emit(playerRemove, player.playerid);
+}
 function GetPlayerByID(id){
   for (let index = 0; index < users.length; index++)
     if(users[index].playerid == id)
@@ -53,10 +62,6 @@ function GetPlayerByID(id){
     
   return null;
 }
-
-http.listen(3000, function(){
-  console.log('listening on *:3000');
-});
 
 function updatePlayers() {
   console.log(users.length);
@@ -97,15 +102,13 @@ function playerConnection(socket) {
   users.push(user);
   socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y], true);
   socket.broadcast.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y],false);
-  //io.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
+  
+  
   for (let index = 0; index < users.length; index++) {
     const p = users[index];
     socket.emit(playerConnected, p.playerid, [p.snake.pos.x,p.snake.pos.y], false);
   }
-  // socket.emit(playerConnected, socket.id, [user.snake.pos.x, user.snake.pos.y]);
-  // socket.broadcast.emit(playerConnectedBroadcast, socket.id, [0, 0]);
-
-
+  
   connecteds++;
 }
 
@@ -113,10 +116,26 @@ function Player(playerid, snake, socket){
   this.playerid = playerid;
   this.snake = snake;
   this.playerSocket = socket;
+  this.playerScore = 0;
+
+  function updateScore(score){
+    this.playerScore += score;
+    io.emit(playerScoreChange, this.playerid, );
+  }
+}
+function Food(foodScore, foodPos){
+  this.foodScore = foodScore;
+  var x,y;
+  this.pos = {x,y};
+  this.pos.x = foodPos[0];
+  this.pos.y = foodPos[1];
 }
 
-
+const playerScoreChange = 'scorechange';
 const playerConnected = 'assign player id';
 const playerConnectedBroadcast = 'assign network player id';
 const playerChangeDirection = 'playerChangeDirection';
 const playerMove = 'moveplayer';
+const playerRemove = 'destroyplayer';
+const foodSpawn = 'spawnfood';
+const foodDestroy = 'destroyfood';

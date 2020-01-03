@@ -1,50 +1,25 @@
+    // @ts-ignore
 const pixiapp = new PIXI.Application();
+
+
+    // @ts-ignore
 var socket = io('localhost:3000');
 
 document.body.appendChild(pixiapp.view);
 pixiapp.renderer.backgroundColor = 0x26272b;
 
+
+    // @ts-ignore
+const style = new PIXI.TextStyle();
+// @ts-ignore
+const highestScore = new PIXI.Text('Score: 0', style);
+
+void function setupScore () {
+    highestScore.x = pixiapp.renderer.width - highestScore.width;
+    pixiapp.stage.addChild(highestScore);
+}();
+
 let users = [];
-// let playerSnake;
-
-socket.on('assign player id', (playerid, pos, isPlayer) => {
-    var player = new Player(playerid, new Snake(pos, isPlayer));
-    users.push(player);
-});
-
-function Player(playerid,snake){
-    this.id = playerid;
-    this.snake = snake;
-}
-
-function Snake(pos, isPlayer){
-    
-    this.name = 'user';
-    this.head = new PIXI.Graphics();
-    this.body = [];
-    this.isPlayer = isPlayer;
-    if(this.isPlayer)
-    this.head.lineStyle(4,0xFFFFFF,2);
-    else{
-    this.head.lineStyle(4,0xFF0000,2);
-
-    }
-
-    this.head.x = pos[0];
-    this.head.y = pos[1];
-
-    this.head.lineTo(32,0);
-
-    pixiapp.stage.addChild(this.head);
-
-    // for (let index = 0; index < 5; index++) {
-    //     let line = new PIXI.Graphics();
-    //     line.lineStyle(4,0xFFFFFF, 2); 
-    //     line.lineTo(32,0);
-    //     pixiapp.stage.addChild(line);
-    //     snake.body.push(line);
-    // }
-}
 
 let wKey = keyboard("w");
 let aKey = keyboard("a");
@@ -55,53 +30,48 @@ let moveDirection = 0;
 
 let framesCount = 0;
 
+    // @ts-ignore
 PIXI.Ticker.shared.add(this.UpdateGame);
 
-// function InitializeGame(){
+function Player(playerid,snake){
+    this.id = playerid;
+    this.snake = snake;
+    this.score = 0;
 
+    function setScore(score){
+        this.score = score;
+    }
+}
 
+function Snake(pos, isPlayer){
+    this.name = 'user';
+    // @ts-ignore
+    this.head = new PIXI.Graphics();
+    this.body = [];
+    this.isPlayer = isPlayer;
+    if(this.isPlayer)
+    this.head.lineStyle(4,0xFFFFFF,2);
+    else{
+    this.head.lineStyle(4,0xFF0000,2);
+    }
 
-// }
-// InitializeGame();
+    this.head.x = pos[0];
+    this.head.y = pos[1];
 
+    this.head.lineTo(32,0);
+
+    pixiapp.stage.addChild(this.head);
+}
 
 function UpdateGame(deltaTime){
     CheckMoveDirection();
 }
-
-function moveBody(lastheadpos, lastMoveDirection) {
-    const lastBody = playerSnake.body.pop();
-    lastBody.clear();
-    lastBody.lineStyle(4, 0xFFFFFF, 2);
-    lastBody.x = lastheadpos[0];
-    lastBody.y = lastheadpos[1];
-    switch (lastMoveDirection) {
-        case 0:
-            lastBody.lineTo(0, -32);
-            break;
-        case 1:
-            lastBody.lineTo(-32, 0);
-            break;
-        case 2:
-            lastBody.lineTo(0, 32);
-            break;
-        case 3:
-            lastBody.lineTo(32, 0);
-            break;
-    }
-    playerSnake.body.unshift(lastBody);
-}
 function moveHeadMP(obj, movepos, movedir, isPlayer){
             obj.clear();
-
-            //if(obj === playerSnake)
             if(isPlayer)
                 obj.lineStyle(4,0xFFFFFF,2);
             else
                 obj.lineStyle(4,0xFF0000,2);
-            // else
-            //     obj.lineStyle(4, 0xFFFFFF, 2);
-
             obj.x = movepos.x;
             obj.y = movepos.y;
 
@@ -120,12 +90,29 @@ function moveHeadMP(obj, movepos, movedir, isPlayer){
                     break;
             }
 }
+
+socket.on('assign player id', (playerid, pos, isPlayer) => {
+    var player = new Player(playerid, new Snake(pos, isPlayer));
+    users.push(player);
+});
+
 socket.on('moveplayer', (playerid, pos, mov) => {
     var p = GetPlayerByID(playerid);
     moveHeadMP(p.snake.head, pos,mov, p.snake.isPlayer);
-    
-    //console.log(GetPlayerByID(playerid));
 });
+socket.on('scorechange', (playerid, score) => {
+    var p = GetPlayerByID(playerid);
+    p.setScore(score);
+});
+socket.on('destroyplayer', (playerid) => {
+    removePlayer(GetPlayerByID(playerid));
+});
+
+function removePlayer(player){
+    player.snake.head.destroy();
+    pixiapp.stage.removeChild(player.snake.head);
+    users.splice(users.indexOf(player),1);
+}
 
 function GetPlayerByID(id){
     for (let index = 0; index < users.length; index++)
@@ -133,43 +120,7 @@ function GetPlayerByID(id){
         return users[index];
       
     return null;
-  }
-
-// function moveHead(obj, movedir) {
-//     obj.clear();
-//     obj.lineStyle(4, 0xFFFFFF, 2);
-//     switch (movedir) {
-//         case 0:
-//             obj.y -= 32;
-//             obj.lineTo(0, 32);
-//             break;
-//         case 1:
-//             obj.x -= 32;
-//             obj.lineTo(32, 0);
-//             break;
-//         case 2:
-//             obj.y += 32;
-//             obj.lineTo(0, -32);
-//             break;
-//         case 3:
-//             obj.x += 32;
-//             obj.lineTo(-32, 0);
-//             break;
-//     }
-//     if(obj.x < 0){
-//         obj.x = pixiapp.renderer.width;
-//     }
-//     if(obj.x > pixiapp.renderer.width){
-//         obj.x = 0;
-//     }
-//     if(obj.y < 0){
-//         obj.y = pixiapp.renderer.height;
-//     }
-//     if(obj.y > pixiapp.renderer.height){
-//         obj.y = 0;
-//     }
-// }
-
+}
 function CheckMoveDirection() {
     if (wKey.isDown) {
         moveDirection = 0;
@@ -230,8 +181,3 @@ function keyboard(value){
     return key;
 
 }
-
-const playerConnected = 'assign player id';
-const playerConnectedBroadcast = 'assign network player id';
-const playerChangeDirection = 'playerChangeDirection';
-const playerMove = 'moveplayer';
