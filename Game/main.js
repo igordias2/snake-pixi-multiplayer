@@ -107,6 +107,9 @@ socket.on('scorechange', (playerid, score) => {
 socket.on('destroyplayer', (playerid) => {
     removePlayer(GetPlayerByID(playerid));
 });
+socket.on('spawnfood', (food) => {
+    console.log(food);
+});
 
 function removePlayer(player){
     player.snake.head.destroy();

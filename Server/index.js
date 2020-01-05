@@ -9,16 +9,49 @@ http.listen(3000, () => {
 var connecteds = 0;
 
 setInterval(gameUpdate, 500);
-
+setInterval(gameFoodUpdate, 2500);
 function gameUpdate(){
   updatePlayers();
-};
+  if(connecteds => 1)
+    checkPlayersCollision();
+}
+
+function gameFoodUpdate(){
+  SpawnFood();
+}
+function checkPlayersCollision(){
+  for (let index = 0; index < users.length; index++) {
+    const player = users[index];
+    for (let foodIndex = 0; foodIndex < foods.length; foodIndex++) {
+      const food = foods[foodIndex]; 
+      if(checkCollision(player.snake.pos, food.pos)){
+        console.log("player " + player.playerid + " comeu " + food.id);
+      }
+    }
+  }
+}
+
 
 let users = [];
-var food = [];
+var foods = [];
+var foodLimit = 5;
 
-
-
+function SpawnFood(){
+  if(connecteds <= 0)
+    return;
+  if(foods.length < foodLimit){
+    var min = 10;
+    var max = 50;
+    var x = Math.floor((Math.random() * (+10 - +0)))*32;
+    var y = Math.floor((Math.random() * (+10 - +0)))*32;
+    var pos = {x,y};
+    //console.log(pos);
+    var food = new Food(Math.floor((Math.random() * (+max - +min) + +min)), pos);
+    foods.push(food);
+    //console.log(food);
+    io.emit('spawnfood', food);
+  }
+};
 
 function playerSnake(){
 
@@ -30,7 +63,7 @@ function playerSnake(){
     x,y
   };
 
-  playerSnake.pos.x = 32;
+  playerSnake.pos.x = 0;
   playerSnake.pos.y = 0;
   playerSnake.moveDirection = 3;
 
@@ -69,6 +102,22 @@ function updatePlayers() {
     var user = users[index];
     moveHead(user);
   }
+}
+function checkCollision(aPos, bPos){
+  // console.log(aPos);// bPos);
+  // console.log(bPos);
+  if(aPos.x === bPos.x && aPos.y === bPos.y){
+    return true;
+  }
+  return false;
+  // if(player.pos == food.pos)
+  // {
+  //   destroyFood(food);
+  // }
+}
+function destroyFood(food){
+  foods.splice(foods.indexOf(food),1);
+
 }
 
 function moveHead(user){
@@ -124,11 +173,12 @@ function Player(playerid, snake, socket){
   }
 }
 function Food(foodScore, foodPos){
+  this.foodID = Math.floor(Math.random() * (100 - +10) + +10 );
   this.foodScore = foodScore;
   var x,y;
   this.pos = {x,y};
-  this.pos.x = foodPos[0];
-  this.pos.y = foodPos[1];
+  this.pos.x = foodPos.x;
+  this.pos.y = foodPos.y;
 }
 
 const playerScoreChange = 'scorechange';
