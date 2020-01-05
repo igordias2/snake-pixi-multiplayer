@@ -25,7 +25,8 @@ function checkPlayersCollision(){
     for (let foodIndex = 0; foodIndex < foods.length; foodIndex++) {
       const food = foods[foodIndex]; 
       if(checkCollision(player.snake.pos, food.pos)){
-        console.log("player " + player.playerid + " comeu " + food.id);
+        console.log("player " + player.playerid + " comeu " + food.foodID);
+        destroyFood(food, player);
       }
     }
   }
@@ -104,20 +105,15 @@ function updatePlayers() {
   }
 }
 function checkCollision(aPos, bPos){
-  // console.log(aPos);// bPos);
-  // console.log(bPos);
   if(aPos.x === bPos.x && aPos.y === bPos.y){
     return true;
   }
   return false;
-  // if(player.pos == food.pos)
-  // {
-  //   destroyFood(food);
-  // }
 }
-function destroyFood(food){
+function destroyFood(food, player){
   foods.splice(foods.indexOf(food),1);
-
+  player.addScore(food.foodScore);
+  io.emit(foodDestroy, food);
 }
 
 function moveHead(user){
@@ -169,7 +165,7 @@ function Player(playerid, snake, socket){
 
   function updateScore(score){
     this.playerScore += score;
-    io.emit(playerScoreChange, this.playerid, );
+    io.emit(playerScoreChange, this.playerid, this.playerScore);
   }
 }
 function Food(foodScore, foodPos){

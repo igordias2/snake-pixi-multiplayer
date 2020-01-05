@@ -1,15 +1,14 @@
-    // @ts-ignore
+// @ts-ignore
 const pixiapp = new PIXI.Application();
 
 
-    // @ts-ignore
+// @ts-ignore
 var socket = io('localhost:3000');
 
 document.body.appendChild(pixiapp.view);
 pixiapp.renderer.backgroundColor = 0x26272b;
 
-
-    // @ts-ignore
+// @ts-ignore
 const style = new PIXI.TextStyle();
 // @ts-ignore
 const highestScore = new PIXI.Text('Score: 0', style);
@@ -20,6 +19,8 @@ void function setupScore () {
 }();
 
 let users = [];
+let foods = [];
+
 
 let wKey = keyboard("w");
 let aKey = keyboard("a");
@@ -54,7 +55,7 @@ function Snake(pos, isPlayer){
     else{
     this.head.lineStyle(4,0xFF0000,2);
     }
-
+    this.score = 0;
     this.head.x = pos[0];
     this.head.y = pos[1];
 
@@ -108,8 +109,30 @@ socket.on('destroyplayer', (playerid) => {
     removePlayer(GetPlayerByID(playerid));
 });
 socket.on('spawnfood', (food) => {
-    console.log(food);
+    var f = new Food(food.foodScore, food.pos, food.foodID);
+    foods.push(f);
 });
+socket.on('destroyfood', (food) => {
+    destroyFood(food.foodID);
+     //console.log(food);
+});
+socket.on('scorechange', (playerid, playerscore) => { 
+    var p = GetPlayerByID(playerid);
+    p.score = playerscore;
+    highestScore.test = "Score: " + p.score;
+});
+function destroyFood(id){
+    for (let index = 0; index < foods.length; index++) {
+        const element = foods[index];
+        if(element.foodID === id){
+            foods.splice(index, 1);
+            //@ts-ignore
+            element.graph.destroy();
+            //@ts-ignore
+            pixiapp.stage.removeChild(element.graph);
+        }
+    }
+}
 
 function removePlayer(player){
     player.snake.head.destroy();
@@ -121,7 +144,7 @@ function GetPlayerByID(id){
     for (let index = 0; index < users.length; index++)
       if(users[index].id == id)
         return users[index];
-      
+    
     return null;
 }
 function CheckMoveDirection() {
@@ -183,4 +206,16 @@ function keyboard(value){
 
     return key;
 
+}
+function Food(foodScore, foodPos, foodID){
+    this.foodID = foodID;
+    this.foodScore = foodScore;
+    var x,y;
+    //@ts-ignore
+    this.graph = new PIXI.Graphics();
+    this.graph.lineStyle(4,0xFFFFFF,2);
+    this.graph.x = foodPos.x;
+    this.graph.y = foodPos.y;
+    this.graph.lineTo(4,4);
+    pixiapp.stage.addChild(this.graph);
 }
